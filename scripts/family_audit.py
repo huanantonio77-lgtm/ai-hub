@@ -120,16 +120,52 @@ def _is_container_class(path: Path, cls_name: str) -> bool:
     return False
 
 
+def _collect_test_identifiers(tests_root: Path) -> set:
+    """s203-r1: AST-идентификаторы из тестов (Name.id + Attribute.attr).
+
+    Заменяет grep-based blob: docstring / комментарии / строковые
+    литералы больше не «закрывают» TEST-GAP (spoofing-fix).
+    """
+    names: set = set()
+    if not tests_root or not tests_root.exists():
+        return names
+    for p in tests_root.rglob("*.py"):
+        tree = _parse(p)
+        if tree is None:
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Name):
+                names.add(node.id)
+            elif isinstance(node, ast.Attribute):
+                names.add(node.attr)
+            elif isinstance(node, ast.ImportFrom):
+                for a in node.names:
+                    if a.name:
+                        names.add(a.name.split('.')[-1])
+            elif isinstance(node, ast.Import):
+                for a in node.names:
+                    if a.name:
+                        names.add(a.name.split('.')[-1])
+    return names
+
+
 def scan_test_gap(root: Path, tests_root: Path):
-    blob = "\n".join(
-        p.read_text(encoding="utf-8", errors="ignore")
-        for p in tests_root.rglob("*.py")
-    ) if tests_root.exists() else ""
+    identifiers = _collect_test_identifiers(tests_root)
+    tests_resolved = (
+        tests_root.resolve() if (tests_root and tests_root.exists()) else None
+    )
     out = []
     for py in _iter_py(root):
+        # s203-r1: НЕ сканируем сами тесты — источник ложных findings.
+        if tests_resolved is not None:
+            try:
+                py.resolve().relative_to(tests_resolved)
+                continue
+            except ValueError:
+                pass
         rel = py.relative_to(root.parent).as_posix()
         for cls in _public_classes(py):
-            if cls not in blob:
+            if cls not in identifiers:
                 is_container = _is_container_class(py, cls)
                 prio = "P3" if is_container else "P2"
                 kind_suffix = " (container)" if is_container else ""
@@ -139,6 +175,14 @@ def scan_test_gap(root: Path, tests_root: Path):
                     desc="класс " + cls + " в " + rel + " не упоминается в тестах" + kind_suffix,
                     priority=prio,
                 ))
+    # s203-r1: canary — TEST-GAP не должен содержать Test*-классы.
+    bad = [f.target for f in out if f.target.startswith("Test")]
+    if bad:
+        print(
+            "family_audit WARN: TEST-GAP targets starting 'Test': "
+            f"{bad[:5]} (likely scanning tests dir instead of app/)",
+            file=sys.stderr,
+        )
     return out
 
 

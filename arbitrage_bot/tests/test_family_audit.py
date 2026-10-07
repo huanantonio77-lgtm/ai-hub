@@ -331,3 +331,26 @@ class TestFamilyAudit(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestFamilyAuditRealRepo(unittest.TestCase):
+    """s203-r1: golden-set на реальном arbitrage_bot.
+
+    Регрессионный якорь против слома detector'а:
+    - canary не срабатывает (TEST-GAP target НЕ начинается с 'Test')
+    - findings не пустые (иначе scan вообще не работает)
+    - scan_test_gap не сканирует сам tests_root
+    """
+
+    def test_v21_scan_real_repo_no_Test_targets(self):
+        repo = Path(__file__).resolve().parents[2]
+        app = repo / "arbitrage_bot"
+        tests = repo / "arbitrage_bot" / "tests"
+        findings = family_audit.scan_test_gap(app, tests)
+        # canary: skip tests должен исключать все Test*-классы
+        bad = [f.target for f in findings if f.target.startswith("Test")]
+        self.assertEqual(bad, [],
+            f"canary failed: TEST-GAP has Test* targets {bad[:5]} (scanner broken)")
+        # sanity: если 0 findings при 100+ классах — detector подозрительно мёртв
+        self.assertGreater(len(findings), 0,
+            "scan_test_gap returned 0 — detector may be broken")
