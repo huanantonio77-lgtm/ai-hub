@@ -1,6 +1,6 @@
 #!/bin/bash
 # Daily Reddit karma-ramp reminder (14:00 MSK)
-MSG="Reddit karma ramp: 2-3 комментария (r/LocalLLaMA / r/algotrading). Цель karma >= 50. Когда >= 50 — постить оба репо."
+MSG="Reddit u/More-Character-6188 (karma ramp): 2-3 комментария в r/LocalLLaMA / r/algotrading / r/MachineLearning. Без ссылок, без self-promo. Цель karma >= 50."
 osascript <<APPLESCRIPT
 display notification "$MSG" with title "ai-hub: Reddit reminder" subtitle "14:00 MSK" sound name "Ping"
 APPLESCRIPT
