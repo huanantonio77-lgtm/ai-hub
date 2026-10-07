@@ -8,6 +8,44 @@ STATUS = ROOT / "self/curator/STATUS.md"
 REPORT = ROOT / "self/curator/SELF_RESEARCH_REPORT.md"
 PY = sys.executable
 
+
+# --- SELF_RELOAD (s206) ---
+import os as _os
+import sys as _sys
+import signal as _signal
+import importlib as _importlib
+
+_SELF_FILE = __file__
+_SELF_MTIME = _os.path.getmtime(__file__)
+_RELOAD_REQUESTED = {"flag": False}
+
+def _request_reload(signum=None, frame=None):
+    _RELOAD_REQUESTED["flag"] = True
+
+try:
+    _signal.signal(_signal.SIGHUP, _request_reload)
+except Exception:
+    pass
+
+def _check_self_reload():
+    """Returns True if reload needed (mtime changed or SIGHUP)."""
+    global _SELF_MTIME
+    if _RELOAD_REQUESTED["flag"]:
+        return True
+    try:
+        mt = _os.path.getmtime(_SELF_FILE)
+    except OSError:
+        return False
+    if mt > _SELF_MTIME:
+        _SELF_MTIME = mt
+        return True
+    return False
+
+def _do_self_reload():
+    log("=== SELF_RELOAD: re-exec (PID preserved) ===")
+    _os.execv(_sys.executable, [_sys.executable] + _sys.argv)
+# --- /SELF_RELOAD ---
+
 def log(m):
     with LOG.open("a", encoding="utf-8") as f: f.write(m + "\n")
     print(m, flush=True)  # s190-p2: also to stdout -> logs/self_daemon.out
@@ -70,6 +108,7 @@ def cycle():
     run([PY, str(ROOT/"scripts/self_monitor.py"), "--apply"], t=60)
     run([PY, str(ROOT/"scripts/drafts_gc.py"), "--apply"], t=60)
     run([PY, str(ROOT/"scripts/lessons_hygiene.py"), "--apply", "--session", "auto"], t=60)
+    run([PY, str(ROOT/"scripts/cert_healer.py")], t=60)  # s206 SSL cert daily healer
     run([PY, str(ROOT/"scripts/exchange_healthcheck.py"), "--apply"], t=120)
     run([PY, str(ROOT/"scripts/arbitrage_scan.py"), "--apply", "--write-stats"], t=120)  # s197-p1a
     trading_research_daily()  # s198-p15
@@ -96,6 +135,8 @@ def cycle():
         f"{tele}\n\n## Last research report\n\n{body}\n\n---\nlog: `self/curator/self_loop.log`\n",
         encoding="utf-8")
     log(f"=== cycle done {datetime.datetime.now()} ===")
+    if _check_self_reload():
+        _do_self_reload()
 
 if __name__ == "__main__":
     log(f"=== daemon start {datetime.datetime.now()} ===")
