@@ -351,6 +351,24 @@ class TestFamilyAuditRealRepo(unittest.TestCase):
         bad = [f.target for f in findings if f.target.startswith("Test")]
         self.assertEqual(bad, [],
             f"canary failed: TEST-GAP has Test* targets {bad[:5]} (scanner broken)")
-        # sanity: если 0 findings при 100+ классах — detector подозрительно мёртв
-        self.assertGreater(len(findings), 0,
-            "scan_test_gap returned 0 — detector may be broken")
+        # NOTE: assertGreater(len(findings), 0) убран s203 — 0 findings
+        # это КОРРЕКТНОЕ состояние (P2 закрыт). Инвариант = поведение на
+        # fixture (v22), а не текущее состояние репо.
+
+    def test_v22_detector_finds_known_gap_on_fixture(self):
+        """s203-r3: детерминированный инвариант — detector находит 1 класс.
+
+        Temp-репа: 1 модуль с 1 непокрытым классом + пустой tests/.
+        Findings должен содержать ровно этот класс.
+        """
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td) / "arbitrage_bot"
+            (repo / "app").mkdir(parents=True)
+            (repo / "tests").mkdir(parents=True)
+            (repo / "app" / "sample.py").write_text(
+                "class OrphanClass:\n    pass\n", encoding="utf-8"
+            )
+            findings = family_audit.scan_test_gap(repo, repo / "tests")
+        targets = [f.target for f in findings]
+        self.assertIn("OrphanClass", targets,
+            f"detector missed known gap: {targets}")
