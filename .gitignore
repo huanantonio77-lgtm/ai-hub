@@ -1,0 +1,98 @@
+# === CRITICAL: Secrets & credentials ===
+.secrets/
+creds/
+*.key
+*.pem
+*.p12
+*_api_key.txt
+*_api_key.txt.real
+.env
+.env.*
+
+# === Massive dirs (browser profiles, backups) ===
+.browser/
+archive/
+*.tar.gz
+*.tgz
+*.zip
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+venv/
+.venv/
+env/
+
+# === Runtime / cache / logs ===
+.cache/
+.runtime/
+.trash/
+logs/
+*.log
+*.pid
+
+# === OS ===
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# === Backups / swaps ===
+*.bak
+*.bak-*
+*.bak_*
+*.orig
+*.rej
+
+# === Large generated artifacts ===
+knowledge/lessons_embeddings.jsonl
+knowledge/lessons_embeddings.jsonl.bak*
+
+# === Session handoffs (internal) ===
+/HANDOFF
+/HANDOFF*
+
+# === Internal state ===
+self/_locks/
+self/curator/
+self/healers/
+strategy/_autonomy_health.jsonl
+
+# === Provider config (may include keys/paths) ===
+/models.json
+/provider_limits.json
+/providers_registry.json
+/agent_inventory.txt
+/memory.json
+
+# === Root-level ad-hoc / one-off scripts ===
+/_patch_*.py
+/_test_*.py
+/_list_*.py
+/_patch_plan.json
+/patch_*.py
+/inspect_*.py
+/fix_*.py
+/apply_*.py
+/search_*.py
+/make_*.py
+/find_*.py
+/final_scan.py
+/scan_brand.py
+/verify_brand.py
+/publish_vcru.py
+/vcru_*.py
+/1cd
+/8
+/mark_cooldown
+
+# === Internal prompts / processes ===
+/GEMINI.md
+/PROCESS.md
+
+# === Odd shell artifacts (root) ===
+/знаю,
+/вижу:

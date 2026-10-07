@@ -1,0 +1,8 @@
+# ai-hub — optional dependencies
+# Install only if you need: cover generation / browser automation.
+#
+# After install, run once:
+#     python3 -m playwright install chromium
+
+Pillow>=10.0
+playwright>=1.40

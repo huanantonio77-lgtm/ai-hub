@@ -1,0 +1,47 @@
+# ai-hub — Docker build context exclusions
+
+# Git / VCS
+.git
+.gitignore
+.github
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# macOS
+.DS_Store
+._*
+
+# Archives & backups
+archive/
+*.bak
+*.bak-*
+*.tar.gz
+*.zip
+
+# Handoff dumps (много, не нужны в образе)
+HANDOFF
+HANDOFF-*.md
+
+# Runtime caches / logs
+.cache/
+logs/
+*.log
+*.jsonl
+
+# Secrets (никогда)
+.env
+.env.*
+*.pem
+*.key
+
+# Ollama models (external service)
+models/

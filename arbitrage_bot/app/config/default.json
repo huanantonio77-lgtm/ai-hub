@@ -1,0 +1,27 @@
+{
+  "min_profit_percent": 0.25,
+  "safety_buffer_percent": 0.1,
+  "max_slippage_percent": 0.08,
+  "pairs": [
+    "BTC/USDT",
+    "ETH/USDT",
+    "SOL/USDT",
+    "XRP/USDT"
+  ],
+  "exchange_fees_percent": {
+    "exchange_a_taker": 0.1,
+    "exchange_a_maker": 0.08,
+    "exchange_b_taker": 0.1,
+    "exchange_b_maker": 0.08
+  },
+  "mode": "RESEARCH",
+  "taker_fees_percent": {
+    "hyperliquid": 0.035,
+    "dydx": 0.05,
+    "paradex": 0.03,
+    "orca": 0.0,
+    "raydium": 0.0,
+    "gmx": 0.0
+  },
+  "_comment_taker_fees": "CLOB: real taker. AMM: 0.0 (fee already in synthetic book, s195-r0)"
+}

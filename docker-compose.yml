@@ -1,0 +1,44 @@
+# ai-hub — minimal docker-compose
+# Ollama runs EXTERNALLY (host.docker.internal:11434).
+# Usage:
+#   docker compose up -d
+#   docker compose logs -f self-daemon
+#   docker compose down
+
+version: "3.9"
+
+services:
+  self-daemon:
+    build: .
+    image: ai-hub:latest
+    container_name: ai-hub-self
+    restart: unless-stopped
+    environment:
+      OLLAMA_HOST: "http://host.docker.internal:11434"
+      TZ: "UTC"
+    volumes:
+      - ./knowledge:/app/knowledge
+      - ./self:/app/self
+      - ./logs:/app/logs
+      - ./.cache:/app/.cache
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # Uses Dockerfile ENTRYPOINT (self_daemon.py)
+
+  agent-daemon:
+    image: ai-hub:latest
+    container_name: ai-hub-agent
+    restart: unless-stopped
+    depends_on:
+      - self-daemon
+    command: ["python3", "agent_daemon.py", "--interval", "120"]
+    environment:
+      OLLAMA_HOST: "http://host.docker.internal:11434"
+      TZ: "UTC"
+    volumes:
+      - ./knowledge:/app/knowledge
+      - ./self:/app/self
+      - ./logs:/app/logs
+      - ./.cache:/app/.cache
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "updated": "2026-10-01",
+  "default": "deny",
+  "tools": {
+    "read_text": {
+      "kind": "fs_read",
+      "reversible": true,
+      "enforce": true,
+      "denied_patterns": [
+        "^\\.secrets/",
+        "^\\.ssh/",
+        "^\\.git/",
+        "^\\.env$",
+        "^\\.env\\.",
+        "^\\.bash_history$",
+        "^\\.zsh_history$",
+        "^\\.aws/",
+        "^\\.config/gcloud/"
+      ],
+      "max_bytes": 1000000
+    },
+    "fetch_url": {
+      "kind": "http_get",
+      "reversible": true,
+      "enforce": true,
+      "allowed_schemes": [
+        "http",
+        "https"
+      ],
+      "denied_domains": [
+        "localhost",
+        "127.0.0.1",
+        "::1",
+        "0.0.0.0"
+      ],
+      "denied_prefixes": [
+        "10.",
+        "192.168.",
+        "169.254.",
+        "172.16.",
+        "172.17.",
+        "172.18.",
+        "172.19.",
+        "172.2",
+        "172.30.",
+        "172.31."
+      ],
+      "max_url_len": 2048
+    },
+    "tavily_search": {
+      "kind": "http_get",
+      "reversible": true,
+      "enforce": false,
+      "allowed_schemes": [
+        "https"
+      ],
+      "allowed_hosts": [
+        "api.tavily.com"
+      ],
+      "max_url_len": 2048,
+      "max_per_minute": 30
+    },
+    "tavily_extract": {
+      "kind": "http_get",
+      "reversible": true,
+      "enforce": false,
+      "allowed_schemes": [
+        "https"
+      ],
+      "allowed_hosts": [
+        "api.tavily.com"
+      ],
+      "max_url_len": 2048,
+      "max_per_minute": 30
+    },
+    "ask_gemini": {
+      "kind": "llm_call",
+      "reversible": false,
+      "enforce": true,
+      "allowed_hosts": [
+        "generativelanguage.googleapis.com"
+      ],
+      "max_prompt_chars": 100000,
+      "max_per_minute": 30
+    },
+    "ask_groq": {
+      "kind": "llm_call",
+      "reversible": false,
+      "enforce": true,
+      "allowed_hosts": [
+        "api.groq.com"
+      ],
+      "max_prompt_chars": 6000,
+      "max_per_minute": 30
+    },
+    "ask_openrouter": {
+      "kind": "llm_call",
+      "reversible": false,
+      "enforce": true,
+      "allowed_hosts": [
+        "openrouter.ai"
+      ],
+      "max_prompt_chars": 100000,
+      "max_per_minute": 30
+    }
+  }
+}

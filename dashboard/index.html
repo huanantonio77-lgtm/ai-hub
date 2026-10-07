@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>ai-hub — штаб агентов</title>
+<meta http-equiv="refresh" content="30">
+<style>
+  body { font-family: -apple-system, sans-serif; background:#fff; color:#111; margin:0; padding:24px; }
+  h1 { margin:0 0 4px 0; font-size:22px; }
+  .sub { color:#666; margin-bottom:24px; font-size:13px; }
+  .layout { display:grid; grid-template-columns: 1fr 380px; gap:20px; }
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+  .card { background:#fafafa; border:1px solid #e5e5e5; border-radius:10px; padding:14px; }
+  .card h2 { margin:0 0 10px 0; font-size:14px; color:#0a6cff; }
+  ul { margin:0; padding-left:18px; font-size:13px; line-height:1.7; }
+  .ok { color:#1a9b3c; }
+  .wait { color:#c78a00; }
+  .badge { display:inline-block; font-size:11px; padding:2px 8px; border-radius:10px; background:#eee; color:#666; margin-left:6px; }
+  .chat { background:#fafafa; border:1px solid #e5e5e5; border-radius:10px; padding:14px; display:flex; flex-direction:column; height:600px; }
+  .chat h2 { margin:0 0 8px 0; font-size:14px; color:#0a6cff; }
+  .msgs { flex:1; overflow-y:auto; background:#fff; border:1px solid #eee; border-radius:8px; padding:10px; margin-bottom:10px; }
+  .msg { margin-bottom:8px; padding:8px 10px; border-radius:8px; font-size:13px; line-height:1.5; }
+  .msg.me { background:#e7f0ff; }
+  .msg .t { font-size:10px; color:#888; display:block; margin-bottom:2px; }
+  textarea { width:100%; box-sizing:border-box; min-height:60px; border:1px solid #ccc; border-radius:8px; padding:8px; font-family:inherit; font-size:13px; resize:vertical; }
+  .row { display:flex; gap:8px; margin-top:8px; }
+  button { flex:1; padding:8px 12px; border:1px solid #ccc; background:#fff; border-radius:8px; font-size:13px; cursor:pointer; }
+  button.primary { background:#0a6cff; color:#fff; border-color:#0a6cff; }
+  button:hover { opacity:0.9; }
+</style>
+</head>
+<body>
+  <h1>ai-hub — штаб агентов</h1>
+  <div class="sub">Обновлено: 2026-10-06 22:11. Слева — состояние системы. Справа — твой блокнот-чат.</div>
+
+  <div class="layout">
+    <div class="grid">
+      <div class="card">
+        <h2>Агенты <span class="badge">5</span></h2>
+        <ul><li><b>01-orchestrator</b> <span class="ok">✓</span></li><li><b>02-researcher</b> <span class="ok">✓</span></li><li><b>03-writer</b> <span class="ok">✓</span></li><li><b>04-planner</b> <span class="ok">✓</span></li><li><b>05-qa</b> <span class="ok">✓</span></li></ul>
+      </div>
+
+      <div class="card">
+        <h2>Проекты <span class="badge">22</span></h2>
+        <ul><li><b>_drafts</b> <span class="badge">57 файлов</span></li><li><b>ab_test_email_subjects</b> <span class="badge">2 файлов</span></li><li><b>ai_nova_content</b> <span class="badge">1 файлов</span></li><li><b>cold-emails-ainova</b> <span class="badge">1 файлов</span></li><li><b>demo_short</b> <span class="badge">1 файлов</span></li><li><b>kindergarten-autumn-post</b> <span class="badge">1 файлов</span></li><li><b>kindergarten-september-post</b> <span class="badge">5 файлов</span></li><li><b>kindergarten-tbilisi-analysis</b> <span class="badge">3 файлов</span></li><li><b>kindergarten-tbilisi-competitors</b> <span class="badge">4 файлов</span></li><li><b>kindergarten-tbilisi-competitors-2</b> <span class="badge">5 файлов</span></li><li><b>kindergarten-tbilisi-competitors-3</b> <span class="badge">4 файлов</span></li><li><b>kindergarten-tbilisi-competitors-4</b> <span class="badge">4 файлов</span></li><li><b>kindergarten-tbilisi-competitors-5</b> <span class="badge">0 файлов</span></li><li><b>kindergarten-tbilisi-competitors-6</b> <span class="badge">4 файлов</span></li><li><b>kindergarten-tbilisi-competitors-7</b> <span class="badge">4 файлов</span></li><li><b>kindergarten-tbilisi-competitors-8</b> <span class="badge">4 файлов</span></li><li><b>kindergarten-tbilisi-content-plan</b> <span class="badge">1 файлов</span></li><li><b>kindergarten-tbilisi-market-data</b> <span class="badge">4 файлов</span></li><li><b>landing_pages</b> <span class="badge">2 файлов</span></li><li><b>modules-expansion-plan</b> <span class="badge">2 файлов</span></li><li><b>pitch_deck</b> <span class="badge">1 файлов</span></li><li><b>telegram-hid-streams</b> <span class="badge">1 файлов</span></li></ul>
+      </div>
+
+      <div class="card">
+        <h2>База знаний <span class="badge">64 файлов</span></h2>
+        <ul><li>anything2explainer.md <span class="badge">54 строк</span></li><li>competitors_pricing.md <span class="badge">45 строк</span></li><li>deep_dive_self_healing_software_systems.json <span class="badge">131 строк</span></li><li>infra-log.md <span class="badge">17302 строк</span></li><li>inventory.json <span class="badge">5842 строк</span></li><li>lesson_applications.jsonl <span class="badge">25 строк</span></li><li>lessons.md <span class="badge">7061 строк</span></li><li>lessons.md.bak-s137-checkfix-173900 <span class="badge">5651 строк</span></li><li>lessons.md.bak-s137-checkfix2-174001 <span class="badge">5652 строк</span></li><li>lessons.md.bak-s137-rule04-173656 <span class="badge">5646 строк</span></li><li>lessons.md.bak-s138-aiv-20261004-175450 <span class="badge">5652 строк</span></li><li>lessons.md.bak-s138-dedupinfo-20261004-180226 <span class="badge">5657 строк</span></li><li>lessons.md.bak-s139-scalefix-20261004-182840 <span class="badge">5663 строк</span></li><li>lessons.md.bak-s140-decided-20261004-185424 <span class="badge">5669 строк</span></li><li>lessons.md.bak-s141-p1-verify-20261004-161411 <span class="badge">5684 строк</span></li><li>lessons.md.bak-s142-p1-20261004_193549 <span class="badge">5690 строк</span></li><li>lessons.md.bak-s143-20261004_194324 <span class="badge">5697 строк</span></li><li>lessons.md.bak-s144-20261004_195237 <span class="badge">5703 строк</span></li><li>lessons.md.bak-s145-extranl-fp-20261004_201001 <span class="badge">5716 строк</span></li><li>lessons.md.bak-s146-r2-20261004_201838 <span class="badge">5734 строк</span></li><li>lessons.md.bak-s146-r2b-lesson-20261004_202137 <span class="badge">5745 строк</span></li><li>lessons.md.bak-s146-r3-20261004_210643 <span class="badge">5756 строк</span></li><li>lessons.md.bak-s146-r6-20261004_211900 <span class="badge">5803 строк</span></li><li>lessons.md.bak-s146-substring-audit-20261004_201800 <span class="badge">5734 строк</span></li><li>lessons.md.bak-s147-docs-20261004_214639 <span class="badge">5823 строк</span></li><li>lessons.md.bak-s147-heal-20261004_215616 <span class="badge">5907 строк</span></li><li>lessons.md.bak-s148-lessons-20261004-190831 <span class="badge">5922 строк</span></li><li>lessons.md.bak-s148-lessons2-20261004-192242 <span class="badge">5963 строк</span></li><li>lessons.md.bak-s149-lessons-20261004-194215 <span class="badge">6035 строк</span></li><li>lessons.md.bak-s149-r67-20261004-194524 <span class="badge">6095 строк</span></li><li>lessons.md.bak-s150-20261004-231404 <span class="badge">6120 строк</span></li><li>lessons.md.bak-s150-r6-20261004-232110 <span class="badge">6158 строк</span></li><li>lessons.md.bak-s151-20261004-234327 <span class="badge">6175 строк</span></li><li>lessons.md.bak-s152-20261005-001022 <span class="badge">6214 строк</span></li><li>lessons.md.bak-s155-20261005-111049 <span class="badge">6284 строк</span></li><li>lessons.md.bak-s156-20261005-111955 <span class="badge">6289 строк</span></li><li>lessons.md.bak-s157-A0-20261005-113206 <span class="badge">6297 строк</span></li><li>lessons.md.bak-s157-C3-20261005-113853 <span class="badge">6309 строк</span></li><li>lessons.md.bak-s158-C3-20261005-114307 <span class="badge">6324 строк</span></li><li>lessons.md.bak-s159-C3-20261005-114732 <span class="badge">6337 строк</span></li><li>lessons.md.bak-s159-r5-20261005-115008 <span class="badge">6350 строк</span></li><li>lessons.md.bak-s160-C3-20261005-115457 <span class="badge">6367 строк</span></li><li>lessons.md.bak-s161-C3-20261005-120134 <span class="badge">6383 строк</span></li><li>lessons.md.bak-s166-a8c-20261005-133139 <span class="badge">6470 строк</span></li><li>lessons.md.bak-s167-close1-20261005-142008 <span class="badge">6487 строк</span></li><li>lessons.md.bak-s168-cl1-20261005-114227 <span class="badge">6515 строк</span></li><li>lessons_embeddings.jsonl <span class="badge">250 строк</span></li><li>lessons_embeddings.jsonl.bak-s190-t2-p1 <span class="badge">233 строк</span></li><li>lessons_index.json <span class="badge">3992 строк</span></li><li>mission.md <span class="badge">36 строк</span></li><li>prompt_sources.md <span class="badge">76 строк</span></li><li>remotion-video-pipeline.md <span class="badge">49 строк</span></li><li>research_index.json <span class="badge">127 строк</span></li><li>resources_tested.md <span class="badge">128 строк</span></li><li>roadmap.md <span class="badge">62 строк</span></li><li>skills.json <span class="badge">381 строк</span></li><li>skills.md <span class="badge">123 строк</span></li><li>social_platforms.md <span class="badge">77 строк</span></li><li>state_report.md <span class="badge">94 строк</span></li><li>system-health.md <span class="badge">1378 строк</span></li><li>topics_ai_agents_habr.md <span class="badge">99 строк</span></li><li>weekly-2026-W39.md <span class="badge">35 строк</span></li><li>weekly-2026-W40.md <span class="badge">136 строк</span></li><li>weekly-2026-W41.md <span class="badge">137 строк</span></li></ul>
+      </div>
+
+      <div class="card">
+        <h2>Логи <span class="badge">16 записей</span></h2>
+        <ul><li>verify-2026-10-06-011002.json</li><li>verify-2026-10-06-014144.json</li><li>verify-2026-10-06-133229.json</li><li>verify-2026-10-06-140445.json</li><li>verify-2026-10-06-144129.json</li><li>verify-2026-10-06-162326.json</li><li>verify-2026-10-06-165844.json</li><li>verify-2026-10-06-195055.json</li><li>verify-2026-10-06-202350.json</li><li>verify-2026-10-06-221131.json</li></ul>
+      </div>
+
+      <div class="card">
+        <h2>О пользователе</h2>
+        <ul>
+          <li><b>AI NOVA</b>, автономный AI-агент</li>
+          <li>Сайт: ainova.ooo</li>
+          <li>Ниши: IT + детский сад</li>
+          <li>Аудитория: международная</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Что дальше</h2>
+        <ul>
+          <li>Уровень 4.5: старший зовёт младших (работает)</li>
+          <li>Поиск: Tavily + автоприкрепление к researcher</li>
+          <li>Уровень 5: кэш, ретраи, параллельные вызовы</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="chat">
+      <h2>Мой чат-блокнот</h2>
+      <div class="msgs" id="msgs"></div>
+      <textarea id="input" placeholder="Напиши задачу или заметку... (Ctrl+Enter — отправить)"></textarea>
+      <div class="row">
+        <button class="primary" onclick="send()">Добавить</button>
+        <button onclick="exportMd()">Экспорт</button>
+        <button onclick="clearAll()">Очистить</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const KEY = 'ai-hub-chat';
+  const msgs = document.getElementById('msgs');
+  const input = document.getElementById('input');
+
+  function load() {
+    const data = JSON.parse(localStorage.getItem(KEY) || '[]');
+    msgs.innerHTML = '';
+    data.forEach(m => addToView(m));
+  }
+
+  function addToView(m) {
+    const div = document.createElement('div');
+    div.className = 'msg me';
+    div.innerHTML = '<span class="t">' + m.t + '</span>' + m.text.replace(/</g,'&lt;');
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function send() {
+    const text = input.value.trim();
+    if (!text) return;
+    const data = JSON.parse(localStorage.getItem(KEY) || '[]');
+    const m = { t: new Date().toLocaleString('ru-RU'), text: text };
+    data.push(m);
+    localStorage.setItem(KEY, JSON.stringify(data));
+    addToView(m);
+    input.value = '';
+  }
+
+  function clearAll() {
+    if (!confirm('Стереть все сообщения?')) return;
+    localStorage.removeItem(KEY);
+    load();
+  }
+
+  function exportMd() {
+    const data = JSON.parse(localStorage.getItem(KEY) || '[]');
+    let out = '# Чат-блокнот ai-hub\n\n';
+    data.forEach(m => { out += '**' + m.t + '**\n\n' + m.text + '\n\n---\n\n'; });
+    const blob = new Blob([out], {type: 'text/markdown'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'chat.md';
+    a.click();
+  }
+
+  input.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'Enter') send();
+  });
+
+  load();
+</script>
+</body>
+</html>
