@@ -1,0 +1,7 @@
+{"id":"H1","status":"pending","since_ts":"2026-10-07","session":"s205","title":"Maker-only execution оживляет corr_pairs","next_action":"v4.3 patch + 30-min run"}
+{"id":"H2","status":"pending","since_ts":"2026-10-07","session":"s205","title":"Funding-arb HL<->dYdX","next_action":"create funding_arb.py"}
+{"id":"H3","status":"pending","since_ts":"2026-10-07","session":"s205","title":"LOB imbalance as leading signal","next_action":"collect 30 min HL WS LOB"}
+{"id":"H4","status":"pending","since_ts":"2026-10-07","session":"s205","title":"Z-score threshold tuning","next_action":"backtest Z_THRESH grid"}
+{"id":"H5","status":"pending","since_ts":"2026-10-07","session":"s205","title":"Jito bundle for meme sniping","next_action":"design jito_client.py (deferred)"}
+{"id": "H1", "status": "testing", "session": "s205", "note": "v4.3 maker-only run", "ts": 1791402685.708655}
+{"id": "H1", "status": "testing", "session": "s205-sanity", "note": "only 0 trades in 180s", "ts": 1791402923.538518}

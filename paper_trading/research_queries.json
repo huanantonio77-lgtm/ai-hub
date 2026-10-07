@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "session_created": "s205",
+  "queries": [
+    {"id": "q001", "topic": "maker_orders", "q": "hyperliquid maker fee rebate limit order vs taker", "priority": "P0"},
+    {"id": "q002", "topic": "maker_orders", "q": "dydx v4 maker rebate limit order fee structure", "priority": "P0"},
+    {"id": "q003", "topic": "funding_arb", "q": "perpetual funding rate arbitrage hyperliquid dydx 2024", "priority": "P0"},
+    {"id": "q004", "topic": "funding_arb", "q": "cross venue funding rate arbitrage crypto statistical", "priority": "P1"},
+    {"id": "q005", "topic": "lob_imbalance", "q": "limit order book imbalance strategy crypto 2024 paper", "priority": "P1"},
+    {"id": "q006", "topic": "lob_imbalance", "q": "order flow imbalance predictor high frequency crypto", "priority": "P1"},
+    {"id": "q007", "topic": "coint_pairs", "q": "optimal entry threshold pairs trading cointegration z-score", "priority": "P0"},
+    {"id": "q008", "topic": "coint_pairs", "q": "cointegration crypto pairs trading statistical arbitrage 2024", "priority": "P1"},
+    {"id": "q009", "topic": "latency_arb", "q": "latency arbitrage oracle clob crypto hyperliquid gmx", "priority": "P2"},
+    {"id": "q010", "topic": "meme_momentum", "q": "solana memecoin momentum strategy pump.fun paper 2024", "priority": "P0"},
+    {"id": "q011", "topic": "meme_momentum", "q": "memecoin liquidity pool sniping detection model", "priority": "P1"},
+    {"id": "q012", "topic": "mev", "q": "jito bundle mev protection solana strategy", "priority": "P1"}
+  ]
+}

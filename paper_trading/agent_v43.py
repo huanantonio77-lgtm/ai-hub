@@ -14,7 +14,7 @@ import logger as L
 
 DEXS = {"hyperliquid": "SOL", "dydx": "SOL-USD",
         "gmx": "SOL/USD", "injective": "SOL"}
-FEE = {"hyperliquid": 3.5, "dydx": 5.0, "gmx": 5.0, "injective": 2.0}
+FEE = {"hyperliquid": 1.5, "dydx": 1.0, "gmx": 5.0, "injective": 1.0}
 
 GAS_BPS = 0.1
 SLIP_BPS = 0.5
@@ -27,7 +27,7 @@ CORR_EVERY = 5
 Z_THRESH = 2.0
 
 RT = R / ".runtime"
-S = RT / "paper_state.json"
+S = RT / "paper_state_v43.json"
 RUN = [True]
 
 def stop(*_): RUN[0] = False

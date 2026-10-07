@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "session_updated": "s205",
+  "strategies": [
+    {
+      "name": "corr_pairs_taker",
+      "venue": [
+        "hyperliquid",
+        "dydx",
+        "gmx",
+        "injective"
+      ],
+      "verdict": "killed",
+      "since_session": "s205",
+      "evidence": "s205-r8",
+      "reason": "honest costs 12-21 bps > edge 3-6 bps (v4.2: W/L 0/7, realized -105.82 bps)",
+      "baseline_snapshot": ".runtime/baseline_corr_v42/paper_report_s205_v42.json",
+      "successor": "corr_pairs_maker",
+      "verdict_session": "s205",
+      "verdict_evidence": "80+ trades, final cap 93.44, W/L 4/58",
+      "verdict_reason": "honest fees 12-21 bps > edge; LAST 10 closed all losses"
+    },
+    {
+      "name": "corr_pairs_maker",
+      "venue": [
+        "hyperliquid",
+        "dydx"
+      ],
+      "verdict": "testing",
+      "hypothesis_id": "H1",
+      "expected_edge_bps": "4-8 (maker fees 1.5 bps vs taker 3.5/5.0)",
+      "test_planned": "s205 (v4.3 with maker_only=True)",
+      "sources": [
+        "https://supa.is/article/hyperliquid-limit-order-maker-taker-fees-how-to-pay-less-2026",
+        "https://www.dwellir.com/blog/hyperliquid-fees-explained"
+      ],
+      "verdict_session": "s205-sanity",
+      "verdict_evidence": "v43_run 180s",
+      "verdict_reason": "maker fees maker-only: W/L 0/0, avg +0.00 bps"
+    },
+    {
+      "name": "funding_arb",
+      "venue": [
+        "hyperliquid",
+        "dydx"
+      ],
+      "verdict": "pending",
+      "hypothesis_id": "H2",
+      "expected_apy_pct": "20-60",
+      "test_planned": "s205-s206 (funding_arb.py new module)",
+      "sources": [
+        "https://www.binance.com/en/research",
+        "https://onekey.so/blog/funding-rate-arbitrage"
+      ]
+    },
+    {
+      "name": "lob_imbalance",
+      "venue": [
+        "hyperliquid"
+      ],
+      "verdict": "pending",
+      "hypothesis_id": "H3",
+      "expected_corr": ">0.2 (imbalance vs price_change_5s)",
+      "test_planned": "s206 (collect 30 min HL WS LOB)",
+      "sources": [
+        "https://link.springer.com/article/10.1007/s42521-024-00105-4",
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5031129"
+      ]
+    },
+    {
+      "name": "meme_momentum_jito",
+      "venue": [
+        "raydium",
+        "meteora",
+        "pump.fun"
+      ],
+      "verdict": "pending",
+      "hypothesis_id": "H5",
+      "test_planned": "s206+ (F3.1, real AMM + Jito)",
+      "sources": [
+        "https://docs.jito.wtf/lowlatencytxnsend"
+      ]
+    }
+  ]
+}
