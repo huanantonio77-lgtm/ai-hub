@@ -2,7 +2,7 @@
 """self_monitor.py (s181 P0, s182 P0-C/P0-D) - watchdog + classify + auto-fix."""
 import subprocess, datetime, os, sys
 from pathlib import Path
-ROOT = Path("/Users/salamkhalikov/Desktop/ai-hub")
+ROOT = Path.home() / "Desktop" / "ai-hub"
 OUT = ROOT / "self/curator/AGENT_HEALTH.md"
 KILL_FLAG = ROOT / "strategy" / "_kill_flag.json"
 

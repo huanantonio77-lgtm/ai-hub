@@ -2,7 +2,7 @@
 """self_loop.py (s180) — pure Python orchestrator (bash blocked by TCC)."""
 import subprocess, sys, datetime
 from pathlib import Path
-ROOT = Path("/Users/salamkhalikov/Desktop/ai-hub")
+ROOT = Path.home() / "Desktop" / "ai-hub"
 LOG = ROOT / "self/curator/self_loop.log"
 STATUS = ROOT / "self/curator/STATUS.md"
 REPORT = ROOT / "self/curator/SELF_RESEARCH_REPORT.md"

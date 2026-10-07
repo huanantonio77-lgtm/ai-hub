@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /Users/salamkhalikov/Desktop/ai-hub
+cd "$HOME/Desktop/ai-hub"
 LOG="self/curator/self_loop.log"
 STATUS="self/curator/STATUS.md"
 {
@@ -12,7 +12,7 @@ echo "--- classify done, report ---"
 
 python3 - << 'PYINNER'
 import json, pathlib, datetime
-ROOT = pathlib.Path("/Users/salamkhalikov/Desktop/ai-hub")
+ROOT = pathlib.Path.home() / "Desktop" / "ai-hub"
 p = ROOT / "self/curator/PROPOSALS.jsonl"
 sp = ROOT / "self/curator/SELF_PROPOSALS.jsonl"
 rep = ROOT / "self/curator/SELF_RESEARCH_REPORT.md"
