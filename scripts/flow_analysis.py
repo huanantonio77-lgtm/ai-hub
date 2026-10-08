@@ -42,8 +42,17 @@ def enrich(rec):
                 vs = vs / 1e9
             out["v_sol_now"] = vs
             iv = float(rec.get("vSol", 0) or 0)
-            if iv > 0:
-                out["growth"] = (vs / iv) ** 2 - 1.0
+            suspect = (vs > 200 or vs < 25 or bc.get("complete"))
+            if iv > 0 and not suspect:
+                g = (vs / iv) ** 2 - 1.0
+                if -0.99 < g < 10.0:
+                    out["growth"] = g
+                else:
+                    out["growth"] = None
+                    out["suspect"] = True
+            else:
+                out["growth"] = None
+                out["suspect"] = True
             out["complete"] = bool(bc.get("complete"))
     except Exception:
         pass
