@@ -149,4 +149,18 @@ A/B run показал, что flow-reversal не работает без фил
 
 **Классы мусора:**
 1. Outliers (v_sol>200 или growth вне [-0.99, 10]) — sanitizer отсеивает.
-2. Flat-trades (chg=0.0
+
+## Правило 10 - Data hygiene: мусор не копится (s212)
+
+**Источник:** s212 (пользователь: "почему мусор не чистится, а копится?").
+
+**Классы мусора:**
+1. Outliers (v_sol>200 или growth вне [-0.99, 10]) - sanitizer отсеивает.
+2. Flat-trades (chg=0) - НЕ мусор, а сигнал: токен умер после входа.
+3. Stale logs (deep_dive старше 3 сессий) - архив в archive/runtime/.
+4. Sync debt (git ahead > 5) - push в origin.
+
+**Правила:**
+- В отчёт - только clean data. Avg заменять на median + percentiles.
+- Признак бага: avg > 1000 процентов - откатить, не публиковать.
+- Раз в N сессий - ревизия .runtime/ на stale (>30 дней без чтения).
