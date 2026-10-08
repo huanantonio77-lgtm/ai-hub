@@ -337,6 +337,11 @@ async def tracker(seconds: int):
 
 async def main(seconds: int):
     global RC_SEM, OPEN
+    # s212: kill-flag check (trading pause)
+    _pause_flag = ROOT / ".runtime" / "trading_paused.flag"
+    if _pause_flag.exists():
+        print("[s212] trading paused by flag, exiting cleanly")
+        return
     RC_SEM = asyncio.Semaphore(1)
     OPEN = _load_open()
     t0 = time.time()
