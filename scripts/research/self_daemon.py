@@ -106,6 +106,7 @@ def cycle():
     run([PY, str(ROOT/"scripts/research/self_research.py"), "--run", "--limit", "2"])
     run([PY, str(ROOT/"scripts/autonomous_apply.py"), "pipeline", "--write"], t=300)
     run([PY, str(ROOT/"scripts/self_monitor.py"), "--apply"], t=60)
+    run([PY, str(ROOT/"scripts/self_lint.py")], t=60)
     run([PY, str(ROOT/"scripts/drafts_gc.py"), "--apply"], t=60)
     run([PY, str(ROOT/"scripts/lessons_hygiene.py"), "--apply", "--session", "auto"], t=60)
     run([PY, str(ROOT/"scripts/cert_healer.py")], t=60)  # s206 SSL cert daily healer
