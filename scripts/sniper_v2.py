@@ -21,12 +21,14 @@ JOURNAL = ROOT / ".runtime" / "sniper_v2_trades.jsonl"
 JOURNAL.parent.mkdir(parents=True, exist_ok=True)
 
 SIZE_SOL = 0.05
+import watcher as wwatch
+
 TARGET = 0.5
 STOP = -0.3
-HOLD_S = 240
+HOLD_S = 2400
 MOMENTUM_GATE_SOL = 31.5
 MOMENTUM_WAIT_S = 8
-TICK_S = 15
+TICK_S = 3
 UA = {"User-Agent": "Mozilla/5.0 ai-hub/1.0", "Accept": "application/json"}
 
 MINT_Q = asyncio.Queue(maxsize=200)
@@ -106,8 +108,7 @@ async def worker(wid: int, seconds: int):
         if not mint or mint in OPEN:
             continue
         try:
-            # Momentum gate: wait for chain to settle
-            await asyncio.sleep(MOMENTUM_WAIT_S)
+            await asyncio.sleep(2)
             rc = None; bc = None
             for attempt in range(4):
                 rc = await rugcheck_async(mint)
@@ -115,13 +116,6 @@ async def worker(wid: int, seconds: int):
                 if rc and bc and not bc.get("error"):
                     break
                 await asyncio.sleep(2)
-            # Momentum check: v_sol grew > MOMENTUM_GATE_SOL
-            if bc and not bc.get("error"):
-                v_sol = bc.get("v_sol_reserves", 0) / 1e9
-                if v_sol < MOMENTUM_GATE_SOL:
-                    STATS["rejected"] += 1
-                    REJECT_REASONS[f"no_momentum_{v_sol:.1f}"] += 1
-                    continue
             ok, why = risk_ok(rc)
             if not ok:
                 STATS["rejected"] += 1
@@ -136,17 +130,15 @@ async def worker(wid: int, seconds: int):
                 STATS["rejected"] += 1
                 REJECT_REASONS["px_zero"] += 1
                 continue
+            v_sol = bc.get("v_sol_reserves", 0) / 1e9
             now = int(time.time())
-            OPEN[mint] = {
-                "mint": mint, "entry_ts": now, "entry_px": price,
-                "score_norm": (rc or {}).get("score_normalised"),
-                "risks": len((rc or {}).get("risks") or []),
-                "dev": d.get("traderPublicKey"),
-                "v_sol": bc.get("v_sol_reserves", 0) / 1e9,
-            }
-            STATS["passed"] += 1
-            STATS["entries"] += 1
-            print(f"[w{wid}] ENTRY {mint[:8]} px={price:.3e} score={OPEN[mint]['score_norm']}")
+            meta = {"score_norm": (rc or {}).get("score_normalised"),
+                    "risks": len((rc or {}).get("risks") or []),
+                    "dev": d.get("traderPublicKey"),
+                    "entry_px_seed": price}
+            wwatch.register(mint, v_sol, now, meta)
+            STATS["registered"] = STATS.get("registered", 0) + 1
+            print(f"[w{wid}] WATCH {mint[:8]} v_sol={v_sol:.2f} score={meta['score_norm']}")
         except Exception as e:
             STATS["rejected"] += 1
             print(f"[w{wid}] ERR {mint[:8]}: {type(e).__name__} {e}")
@@ -192,6 +184,53 @@ def _write_exit(mint, pos, px, chg, age, reason, now):
         del OPEN[mint]
 
 
+async def watcher_loop(seconds: int):
+    loop = asyncio.get_running_loop()
+    t0 = time.time()
+    while time.time() - t0 < seconds:
+        await asyncio.sleep(wwatch.WATCH_TICK_S)
+        now = int(time.time())
+        for mint in list(wwatch.WATCH.keys()):
+            if wwatch.expire(mint, now):
+                STATS["expired"] = STATS.get("expired", 0) + 1
+                continue
+            if mint in OPEN:
+                del wwatch.WATCH[mint]
+                continue
+            try:
+                bc = await loop.run_in_executor(None, bc_fetch, mint)
+            except Exception:
+                continue
+            if not bc or bc.get("error"):
+                continue
+            v_sol = bc.get("v_sol_reserves", 0) / 1e9
+            if v_sol < 29.0:
+                del wwatch.WATCH[mint]
+                STATS["dropped_rug"] = STATS.get("dropped_rug", 0) + 1
+                continue
+            wwatch.update(mint, now, v_sol)
+            sig_ok, info = wwatch.signal(mint, now)
+            if not sig_ok:
+                continue
+            price = bc.get("price_sol_per_token") or 0.0
+            if price <= 0:
+                continue
+            meta = wwatch.WATCH[mint]["meta"]
+            OPEN[mint] = {
+                "mint": mint, "entry_ts": now, "entry_px": price,
+                "score_norm": meta.get("score_norm"),
+                "risks": meta.get("risks", 0),
+                "dev": meta.get("dev"),
+                "v_sol": v_sol,
+                "signal_info": info,
+            }
+            STATS["entries"] += 1
+            STATS["passed"] += 1
+            STATS["watch_signals"] = STATS.get("watch_signals", 0) + 1
+            print(f"[watch] ENTRY {mint[:8]} px={price:.3e} dv={info['dv']:.2f} ratio={info['ratio']:.1f} age={info['age']}s")
+            del wwatch.WATCH[mint]
+
+
 async def tracker(seconds: int):
     loop = asyncio.get_running_loop()
     t0 = time.time()
@@ -218,6 +257,7 @@ async def main(seconds: int):
         asyncio.create_task(ws_consumer(seconds)),
         asyncio.create_task(worker(1, seconds)),
         asyncio.create_task(worker(2, seconds)),
+        asyncio.create_task(watcher_loop(seconds)),
         asyncio.create_task(tracker(seconds + 30)),
     ]
     await asyncio.wait(tasks, timeout=seconds + 60)
