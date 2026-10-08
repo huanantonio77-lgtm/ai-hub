@@ -11,7 +11,7 @@ sys.path.insert(0, "scripts")
 from trade_stream import TradeStream
 
 # Config
-MIN_DEV_BUY_SOL   = 0.5
+MIN_DEV_BUY_SOL   = 2.0
 MIN_WAIT_S        = 30
 FILTER_NP_MIN     = 0.3
 FILTER_UB_MIN     = 3
@@ -19,7 +19,7 @@ FILTER_BUY_SOL    = 0.5
 HOLD_S            = 120
 SIZE_SOL          = 0.01
 TICK_S            = 5
-SMOKE_DURATION_S  = 90
+SMOKE_DURATION_S  = 360
 INITIAL_V_SOL     = 30.0  # pump.fun virtual reserve
 
 
