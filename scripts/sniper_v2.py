@@ -22,7 +22,7 @@ if _env.exists():
             os.environ.setdefault(_k.strip(), _v.strip())
 
 RPC_POOL = []
-for _k in ("CHAINSTACK_RPC", "HELIUS_RPC"):
+for _k in ("CHAINSTACK_RPC", "HELIUS_RPC", "QUICKNODE_RPC"):
     _v = os.environ.get(_k)
     if _v:
         RPC_POOL.append((_k.lower().replace("_rpc", ""), _v))
@@ -49,6 +49,12 @@ HOLD_S = 2400
 MOMENTUM_GATE_SOL = 31.5
 MOMENTUM_WAIT_S = 8
 TICK_S = 3
+PARTIAL_1_PCT = 0.50
+PARTIAL_1_LEVEL = 0.50
+PARTIAL_2_PCT = 0.30
+PARTIAL_2_LEVEL = 1.00
+TRAIL_PCT = 0.15
+TRAIL_ACTIVATE = 0.30
 UA = {"User-Agent": "Mozilla/5.0 ai-hub/1.0", "Accept": "application/json"}
 
 MINT_Q = asyncio.Queue(maxsize=200)
@@ -176,32 +182,50 @@ async def _probe(mint, pos, now, loop):
         return None
     chg = (px - pos["entry_px"]) / pos["entry_px"]
     age = now - pos["entry_ts"]
+    pos["peak_chg"] = max(pos.get("peak_chg", 0.0), chg)
+    peak = pos["peak_chg"]
+    size_rem = pos.get("size_remaining", 1.0)
     reason = None
-    if chg >= TARGET:
-        reason = "target"
+    exit_pct = 0.0
+    if chg >= PARTIAL_1_LEVEL and not pos.get("partial_1_done"):
+        reason = "partial_1"; exit_pct = PARTIAL_1_PCT; pos["partial_1_done"] = True
+    elif chg >= PARTIAL_2_LEVEL and pos.get("partial_1_done") and not pos.get("partial_2_done"):
+        reason = "partial_2"; exit_pct = PARTIAL_2_PCT; pos["partial_2_done"] = True
+    elif peak >= TRAIL_ACTIVATE and (peak - chg) >= TRAIL_PCT:
+        reason = "trail"; exit_pct = size_rem
     elif chg <= STOP:
-        reason = "stop"
+        reason = "stop"; exit_pct = size_rem
     elif age >= HOLD_S:
-        reason = "time"
-    return (mint, pos, px, chg, age, reason)
+        reason = "time"; exit_pct = size_rem
+    return (mint, pos, px, chg, age, reason, exit_pct)
 
 
-def _write_exit(mint, pos, px, chg, age, reason, now):
-    pnl = chg * SIZE_SOL
-    STATS["exits"] += 1
-    STATS["pnl_sol"] += pnl
+def _write_exit(mint, pos, px, chg, age, reason, exit_pct, now):
+    size_rem = pos.get("size_remaining", 1.0)
+    size_orig = pos.get("size_original", 1.0)
+    actual_exit = min(exit_pct, size_rem) if exit_pct > 0 else size_rem
+    pnl = SIZE_SOL * actual_exit * chg
     rec = {
         "mint": mint, "entry_ts": pos["entry_ts"], "exit_ts": now,
         "entry_px": pos["entry_px"], "exit_px": px,
         "chg": chg, "age_s": age, "reason": reason,
         "pnl_sol": pnl, "size_sol": SIZE_SOL,
+        "exit_pct": actual_exit, "size_remaining_before": size_rem,
         "score_norm": pos.get("score_norm"), "risks": pos.get("risks"),
     }
     with open(JOURNAL, "a") as f:
         f.write(json.dumps(rec) + "\n")
-    print(f"[t] EXIT {mint[:8]} {reason} chg={chg*100:+.1f}% age={age}s pnl={pnl:+.4f}")
-    if mint in OPEN:
-        del OPEN[mint]
+    STATS["exits"] = STATS.get("exits", 0) + 1
+    print(f"[t] EXIT {mint[:8]} {reason} chg={chg*100:+.1f}% age={age}s pnl={pnl:+.4f} x{actual_exit:.2f}")
+
+    # partial: reduce size, keep in OPEN if remainder > 0
+    new_rem = size_rem - actual_exit
+    if new_rem <= 0.01:
+        if mint in OPEN:
+            del OPEN[mint]
+    else:
+        pos["size_remaining"] = new_rem
+        pos["realized_pnl"] = pos.get("realized_pnl", 0.0) + pnl
 
 
 async def watcher_loop(seconds: int):
@@ -243,11 +267,20 @@ async def watcher_loop(seconds: int):
                 "dev": meta.get("dev"),
                 "v_sol": v_sol,
                 "signal_info": info,
+                "size_original": 1.0,
+                "size_remaining": 1.0,
+                "peak_chg": 0.0,
+                "partial_1_done": False,
+                "partial_2_done": False,
+                "realized_pnl": 0.0,
             }
             STATS["entries"] += 1
             STATS["passed"] += 1
             STATS["watch_signals"] = STATS.get("watch_signals", 0) + 1
-            print(f"[watch] ENTRY {mint[:8]} px={price:.3e} dv={info['dv']:.2f} ratio={info['ratio']:.1f} age={info['age']}s")
+            _dv = info.get('dv', info.get('initial_v', 0.0))
+            _rt = info.get('ratio', info.get('accel', 0.0))
+            _ag = info.get('age', 0)
+            print(f"[watch] ENTRY {mint[:8]} px={price:.3e} dv={_dv:.2f} ratio={_rt:.1f} age={_ag}s")
             del wwatch.WATCH[mint]
 
 
@@ -264,9 +297,9 @@ async def tracker(seconds: int):
         for r in results:
             if not r:
                 continue
-            mint, pos, px, chg, age, reason = r
+            mint, pos, px, chg, age, reason, exit_pct = r
             if reason:
-                _write_exit(mint, pos, px, chg, age, reason, now)
+                _write_exit(mint, pos, px, chg, age, reason, exit_pct, now)
 
 
 async def main(seconds: int):
@@ -295,7 +328,7 @@ async def main(seconds: int):
             px = pos["entry_px"]
         chg = (px - pos["entry_px"]) / pos["entry_px"]
         age = now - pos["entry_ts"]
-        _write_exit(mint, pos, px, chg, age, "force", now)
+        _write_exit(mint, pos, px, chg, age, "force", 1.0, now)
     print("=== STATS ===")
     print(json.dumps(STATS, indent=2))
     print("rejects:", dict(REJECT_REASONS.most_common(10)))
