@@ -1,4 +1,3 @@
-import time
 
 WATCH_TICK_S = 5
 WATCH_WINDOW_S = 60
