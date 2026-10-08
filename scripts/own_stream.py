@@ -36,7 +36,16 @@ class MintState:
     events: deque = field(default_factory=deque)
 
 class SolanaStream:
-    def __init__(self, rpc_ws_url, pumpportal_api_key, on_new_token=None):
+    def __init__(self, pumpportal_api_key, on_new_token=None, rpc_ws_url=None):
+        if rpc_ws_url is None:
+            _env = {}
+            for _l in (ROOT / '.env').read_text().splitlines():
+                if '=' in _l and not _l.startswith('#'):
+                    _k, _v = _l.split('=', 1)
+                    _env[_k.strip()] = _v.strip()
+            _http = _env.get('HELIUS_RPC') or _env.get('CHAINSTACK_RPC') or _env.get('QUICKNODE_RPC')
+            rpc_ws_url = _http.replace('https://', 'wss://').replace('http://', 'ws://')
+        self.rpc_ws_url = rpc_ws_url
         self.rpc_ws_url = rpc_ws_url
         self.pp_api_key = pumpportal_api_key
         self.on_new_token = on_new_token
