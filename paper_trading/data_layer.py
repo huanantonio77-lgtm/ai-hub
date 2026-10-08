@@ -43,6 +43,22 @@ def quote(input_mint: str, output_mint: str, amount_lamports: int,
         "slippageBps": str(slippage_bps),
     })
 
+def price_lamports(mint: str, amount_lamports: int = 1_000_000_000,
+                   slippage_bps: int = 500) -> int | None:
+    """s208-B5c: price via quote. Returns lamports SOL for `amount_lamports` of mint.
+    Returns None on error or empty route. Use instead of price() for fresh pump.fun mints."""
+    if mint == SOL_MINT:
+        return amount_lamports
+    try:
+        q = quote(mint, SOL_MINT, amount_lamports, slippage_bps=slippage_bps)
+        out = q.get("outAmount")
+        if out is None: return None
+        v = int(out)
+        return v if v > 0 else None
+    except Exception:
+        return None
+
+
 def recent_tokens(limit: int = 50) -> list:
     """Recent tokens (S3: new-pool detector). Returns list of dicts."""
     try:
