@@ -94,6 +94,12 @@ async def main():
                 print(f"  [ENTER] {mint[:16]}... np={s['net_pressure']:+.2f} "
                       f"ub={s['unique_buyers']} buy={s['buy_sol']:.3f} v_sol={cur_v:.2f}")
                 candidates.pop(mint, None)
+            elif now - c.seen_at > MIN_WAIT_S * 2:
+                # cost-bug fix: age-out зав. candidates (s211-p5)
+                print(f"  [skip] {mint[:16]}... aged={now-c.seen_at:.0f}s "
+                      f"np={s['net_pressure']:+.2f} ub={s['unique_buyers']}")
+                candidates.pop(mint, None)
+                await ts.unsubscribe_token(mint)
 
         # Positions -> exit check
         for mint, p in list(positions.items()):

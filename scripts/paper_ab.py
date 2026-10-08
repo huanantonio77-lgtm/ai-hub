@@ -52,6 +52,10 @@ async def main():
                 pA[mint]=Pos(mint,now,cur,SIZE,"A")
                 print(f"[A.ENTER] {mint[:14]} np={s['net_pressure']:+.2f} ub={s['unique_buyers']}")
                 cA.pop(mint,None)
+            elif now-c.seen_at>A_WAIT*2:
+                print(f"[A.skip] {mint[:14]} aged={now-c.seen_at:.0f}s np={s['net_pressure']:+.2f}")
+                cA.pop(mint,None)
+                await ts.unsubscribe_token(mint)
         for mint,c in list(cB.items()):
             if mint in pB or now-c.seen_at<B_WAIT: continue
             s=ts.stats_for(mint)
@@ -62,6 +66,10 @@ async def main():
                 pB[mint]=Pos(mint,now,cur,SIZE,"B")
                 print(f"[B.ENTER] {mint[:14]} ex={ex:.3f} np={s['net_pressure']:+.2f}")
                 cB.pop(mint,None)
+            elif now-c.seen_at>B_WAIT*2:
+                print(f"[B.skip] {mint[:14]} aged={now-c.seen_at:.0f}s ex={ex:+.3f}")
+                cB.pop(mint,None)
+                await ts.unsubscribe_token(mint)
         for mint,p in list(pA.items()):
             s=ts.stats_for(mint)
             if s is None: continue
