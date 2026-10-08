@@ -46,7 +46,6 @@ class SolanaStream:
             _http = _env.get('HELIUS_RPC') or _env.get('CHAINSTACK_RPC') or _env.get('QUICKNODE_RPC')
             rpc_ws_url = _http.replace('https://', 'wss://').replace('http://', 'ws://')
         self.rpc_ws_url = rpc_ws_url
-        self.rpc_ws_url = rpc_ws_url
         self.pp_api_key = pumpportal_api_key
         self.on_new_token = on_new_token
         self._states = {}

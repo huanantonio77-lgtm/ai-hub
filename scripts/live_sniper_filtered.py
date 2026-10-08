@@ -7,7 +7,7 @@ from solders.keypair import Keypair
 from solders.transaction import VersionedTransaction
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'scripts'))
-from trade_stream import TradeStream
+from own_stream import SolanaStream as TradeStream  # Rule 12: primary
 env = {}
 for l in (ROOT / ".env").read_text().splitlines():
     if "=" in l and not l.startswith("#"):
