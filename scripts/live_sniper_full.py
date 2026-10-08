@@ -74,10 +74,29 @@ def send_tx(body):
             r2 = rpc_post(rpc_body)
         except Exception as e:
             print(f"  rpc err: {e}"); continue
-        if "result" in r2:
-            return r2["result"]
-        print(f"  rpc err: {json.dumps(r2)[:200]}")
-        time.sleep(2)
+        if "result" not in r2:
+            print(f"  rpc err: {json.dumps(r2)[:200]}")
+            time.sleep(2)
+            continue
+        sig = r2["result"]
+        # Confirm: wait until finalized and check err
+        print(f"  submitted: {sig[:20]}... checking...")
+        for _ in range(20):
+            time.sleep(3)
+            try:
+                cr = rpc_post({"jsonrpc":"2.0","id":1,"method":"getTransaction","params":[sig, {"encoding":"jsonParsed","commitment":"confirmed","maxSupportedTransactionVersion":0}]})
+            except Exception:
+                continue
+            if "result" in cr and cr["result"]:
+                meta = cr["result"].get("meta", {})
+                err = meta.get("err")
+                if err is not None:
+                    print(f"  ON-CHAIN FAIL: {json.dumps(err)[:120]}")
+                    break
+                return sig
+        else:
+            print("  confirm timeout, treating as failed")
+            continue
     return None
 
 def buy(mint):
