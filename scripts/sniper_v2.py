@@ -11,6 +11,26 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 import certifi, websockets
 
+# s210: env loader + multi-RPC pool (fix 429)
+import os
+from pathlib import Path as _P
+_env = _P(__file__).resolve().parent.parent / ".env"
+if _env.exists():
+    for _l in _env.read_text().splitlines():
+        if "=" in _l and not _l.startswith("#"):
+            _k, _v = _l.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
+
+RPC_POOL = []
+for _k in ("CHAINSTACK_RPC", "HELIUS_RPC"):
+    _v = os.environ.get(_k)
+    if _v:
+        RPC_POOL.append((_k.lower().replace("_rpc", ""), _v))
+RPC_POOL.append(("public", "https://api.mainnet-beta.solana.com"))
+
+os.environ["HELIUS_RPC"] = RPC_POOL[0][1] if RPC_POOL else ""
+print(f"[s210] RPC pool: {[n for n,_ in RPC_POOL]}")
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from bonding_curve import fetch as bc_fetch
 
