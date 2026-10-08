@@ -220,4 +220,5 @@ async def main():
     finally:
         await _ts.stop()
 
-asyncio.run(main())
+if __name__ == '__main__':
+    asyncio.run(main())
