@@ -22,6 +22,18 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+def _rel(path: Path) -> str:
+    try:
+        s = str(path)
+        r = str(ROOT)
+        if s == r:
+            return "."
+        if s.startswith(r + "/"):
+            return s[len(r) + 1:]
+        return s
+    except Exception:
+        return str(path)
 SCAN_DIRS = ["scripts", "paper_trading"]
 SCAN_TOP = ["curator.py"]
 CORE_HINTS = ["security/", "curator.py", "self/curator"]
@@ -39,7 +51,7 @@ def _is_comment_or_string(line: str) -> bool:
     return s.startswith("#") or s.startswith('"""') or s.startswith("'''")
 
 def _in_core(path: Path) -> bool:
-    rel = str(path.relative_to(ROOT)) if path.is_absolute() else str(path)
+    rel = _rel(path) if path.is_absolute() else str(path)
     return any(h in rel for h in CORE_HINTS)
 
 def check_dead_code(path: Path, text: str) -> list[dict]:
@@ -48,7 +60,7 @@ def check_dead_code(path: Path, text: str) -> list[dict]:
         if NOQA.search(line):
             continue
         if DEAD_IF.match(line) or DEAD_WHILE.match(line):
-            out.append({"file": str(path.relative_to(ROOT)),
+            out.append({"file": _rel(path),
                         "line": i, "kind": "dead_code",
                         "msg": "dead branch (if/while False|0)",
                         "sample": line.strip()[:80]})
@@ -63,7 +75,7 @@ def check_placeholder(path: Path, text: str) -> list[dict]:
             pass
         m = PLACEHOLDER_RE.search(line)
         if m and not _is_comment_or_string(line):
-            out.append({"file": str(path.relative_to(ROOT)),
+            out.append({"file": _rel(path),
                         "line": i, "kind": "placeholder",
                         "msg": f"placeholder marker: {m.group(0)}",
                         "sample": line.strip()[:80]})
@@ -107,7 +119,7 @@ def check_unused_imports(path: Path, text: str) -> list[dict]:
         line_txt = text.splitlines()[ln - 1] if 0 < ln <= len(text.splitlines()) else ""
         if NOQA.search(line_txt):
             continue
-        out.append({"file": str(path.relative_to(ROOT)),
+        out.append({"file": _rel(path),
                     "line": ln, "kind": "unused_import",
                     "msg": f"unused import: {nm}",
                     "sample": line_txt.strip()[:80]})
@@ -119,13 +131,13 @@ def check_core_whitespace(path: Path, text: str) -> list[dict]:
     out = []
     for i, line in enumerate(text.splitlines(), 1):
         if line != line.rstrip():
-            out.append({"file": str(path.relative_to(ROOT)),
+            out.append({"file": _rel(path),
                         "line": i, "kind": "core_whitespace",
                         "msg": "trailing whitespace",
                         "sample": line[:80]})
         if PLACEHOLDER_RE.search(line) and _is_comment_or_string(line):
             if not NOQA.search(line):
-                out.append({"file": str(path.relative_to(ROOT)),
+                out.append({"file": _rel(path),
                             "line": i, "kind": "core_todo",
                             "msg": "TODO in CORE comment",
                             "sample": line.strip()[:80]})
@@ -170,7 +182,7 @@ def run(target=None):
             try:
                 findings.extend(fn(p, text))
             except Exception as e:
-                findings.append({"file": str(p.relative_to(ROOT)),
+                findings.append({"file": _rel(p),
                                  "line": 0, "kind": "checker_error",
                                  "msg": f"{fn.__name__}: {e}", "sample": ""})
     return findings
