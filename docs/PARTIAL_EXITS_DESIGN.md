@@ -54,3 +54,29 @@ tracker: если exit_pct < 1.0 → не удалять из OPEN, вычест
 - 3/20 mint pump >+100% за 5-60 мин
 - 15% pump >100%, 20% dump <-10%, 65% flat
 - Теоретический RR: +5.75% за сделку при ловле правильным сигналом
+
+## Research Refs (deep_dive exits s210, 45 papers, 790s)
+
+### Key papers (validating Patch 3)
+1. **Stop-Loss, Take-Profit, Trailing Stop: The Exit Decides the Result** (published foreign markets study)
+   - TECH: Entry-Exit Cross-Validation
+   - SUG: assess impact of different entry/exit rules on performance
+   - => use as final backtest methodology
+2. **Volatility Scaled Trailing Stops: Evidence for a Structural Relationship Between Stop Dist...**
+   - TECH: ATR scaling with randomized entry points
+   - SUG: ATR scaling for risk management, randomize entry to isolate exit impact
+   - => v2: TRAIL_PCT should be ATR-scaled, not fixed
+3. **Managing a Crypto-Currency Portfolio Via Minmax Drawdown Control**
+   - TECH: MinMax Drawdown Control framework
+   - SUG: improve reliability of expected returns / covariance matrices
+   - => v2: formal DD control framework
+
+### MVP v1 (current)
+- Fixed TRAIL_PCT=0.15 (simple, measurable)
+- STOP=-0.30, HOLD_S=2400
+- No ATR scaling yet
+
+### V2 (after MVP baseline)
+- TRAIL_PCT scales with rolling ATR of v_sol
+- Entry-Exit cross-validation on backtest
+- MinMax DD constraint applied to portfolio
