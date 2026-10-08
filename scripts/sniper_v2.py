@@ -58,7 +58,39 @@ TRAIL_ACTIVATE = 0.30
 UA = {"User-Agent": "Mozilla/5.0 ai-hub/1.0", "Accept": "application/json"}
 
 MINT_Q = asyncio.Queue(maxsize=200)
-OPEN = {}
+# s212: persistent positions
+POSITIONS_FILE = ROOT / ".runtime" / "positions_open.json"
+
+
+def _save_open():
+    try:
+        POSITIONS_FILE.write_text(json.dumps(OPEN, default=str))
+    except Exception as e:
+        print(f"[positions] save failed: {e}")
+
+
+class _PersistentDict(dict):
+    def __setitem__(self, k, v):
+        super().__setitem__(k, v)
+        _save_open()
+
+    def __delitem__(self, k):
+        super().__delitem__(k)
+        _save_open()
+
+
+def _load_open():
+    d = _PersistentDict()
+    if POSITIONS_FILE.exists():
+        try:
+            data = json.loads(POSITIONS_FILE.read_text())
+            for k, v in data.items():
+                dict.__setitem__(d, k, v)
+        except Exception as e:
+            print(f"[positions] load failed: {e}")
+    return d
+
+OPEN = _PersistentDict()
 STATS = {"seen": 0, "passed": 0, "rejected": 0, "entries": 0, "exits": 0, "pnl_sol": 0.0}
 REJECT_REASONS = Counter()
 RC_SEM = None  # asyncio.Semaphore, init in main
@@ -304,8 +336,9 @@ async def tracker(seconds: int):
 
 
 async def main(seconds: int):
-    global RC_SEM
+    global RC_SEM, OPEN
     RC_SEM = asyncio.Semaphore(1)
+    OPEN = _load_open()
     t0 = time.time()
     tasks = [
         asyncio.create_task(ws_consumer(seconds)),
@@ -317,19 +350,8 @@ async def main(seconds: int):
     await asyncio.wait(tasks, timeout=seconds + 60)
     for t in tasks:
         t.cancel()
-    # force-close any remaining OPEN
-    loop = asyncio.get_running_loop()
-    now = int(time.time())
-    for mint in list(OPEN.keys()):
-        pos = OPEN[mint]
-        try:
-            bc = await loop.run_in_executor(None, bc_fetch, mint)
-            px = (bc or {}).get("price_sol_per_token") or pos["entry_px"]
-        except Exception:
-            px = pos["entry_px"]
-        chg = (px - pos["entry_px"]) / pos["entry_px"]
-        age = now - pos["entry_ts"]
-        _write_exit(mint, pos, px, chg, age, "force", 1.0, now)
+    # s212: persist positions (no force-close)
+    _save_open()
     print("=== STATS ===")
     print(json.dumps(STATS, indent=2))
     print("rejects:", dict(REJECT_REASONS.most_common(10)))
