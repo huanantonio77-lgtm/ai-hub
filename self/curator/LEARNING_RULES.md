@@ -164,3 +164,22 @@ A/B run показал, что flow-reversal не работает без фил
 - В отчёт - только clean data. Avg заменять на median + percentiles.
 - Признак бага: avg > 1000 процентов - откатить, не публиковать.
 - Раз в N сессий - ревизия .runtime/ на stale (>30 дней без чтения).
+
+## Правило 11 - Rent hygiene: Ata не копятся (s212)
+
+**Источник:** s212 (пользователь: "надо вернуть и чтобы возвращалось автоматически + контроль")
+
+**Формулировка:**
+- Каждый live-цикл: 100% sell -> auto-close Ata -> rent (0.00204 SOL) возвращён.
+- Если sell оставил dust (rounding) - Ata НЕ закрывается. Нужен burn + close.
+- Burn: data=bytes([8])+amount_u64(LE), accounts=[ata, mint, owner].
+- Close: data=bytes([9]), accounts=[ata, dest, owner].
+- Обе инструкции в ОДНОЙ tx - атомарно.
+- Контроль: после каждого live-цикла считать ATA count. Если > 3 - bulk burn+close.
+- Алерт: balance drop > N*0.0003 SOL за N сделок без явных rug = rent lock, а не убыток.
+- Rent (0.00204 SOL) - замороженный капитал, возвращается только при close.
+
+**Следствие:**
+- "Loss" в live = fees + slippage + LOCKED rent.
+- Реальный PnL считается ПОСЛЕ bulk close.
+- Не пытаться close вслепую (fail tx = -0.0001 SOL fee каждый раз).
