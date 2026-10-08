@@ -5,6 +5,14 @@ from pathlib import Path
 ROOT = Path.home() / "Desktop" / "ai-hub"
 OUT = ROOT / "self/curator/AGENT_HEALTH.md"
 KILL_FLAG = ROOT / "strategy" / "_kill_flag.json"
+def _log(msg):
+    try:
+        q = ROOT / ".runtime" / "self_monitor.log"
+        q.parent.mkdir(exist_ok=True)
+        with open(q, "a") as f:
+            f.write(datetime.datetime.now().isoformat() + " " + msg + "\n")
+    except Exception:
+        pass
 
 WARN = {
     "com.ainova.self-loop":        {2: "tcc_blocked"},
@@ -13,12 +21,12 @@ WARN = {
 }
 
 def fix_kill_flag_stale():
-    r = subprocess.run(["python3", str(ROOT / "scripts/sign_core.py"), "--verify"],
+    r = subprocess.run([sys.executable, str(ROOT / "scripts/sign_core.py"), "--verify"],
                        capture_output=True, text=True, cwd=str(ROOT))
     if '"valid": true' not in r.stdout:
-        return False, "sig invalid, skip"
+        _log("fix_kill_flag_stale: sig invalid, skip"); return False, "sig invalid, skip"
     if not KILL_FLAG.exists():
-        return False, "flag absent"
+        _log("fix_kill_flag_stale: flag absent"); return False, "flag absent"
     KILL_FLAG.unlink()
     uid = os.getuid()
     subprocess.run(["launchctl", "kickstart", "-k",

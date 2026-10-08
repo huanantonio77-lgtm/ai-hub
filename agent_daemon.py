@@ -70,11 +70,23 @@ def tick(once=False):
     try:
         _kill = ROOT / "strategy" / "_kill_flag.json"
         if _kill.exists():
-            import json as _j
+            import json as _j, datetime as _dt
             _data = _j.loads(_kill.read_text(encoding="utf-8"))
-            log("KILL FLAG: " + str(_data.get("reason", "?")))
-            log("agent_daemon exiting (exit=9)")
-            sys.exit(9)
+            _exp = _data.get("expires_at")
+            if not _exp:
+                _mt = _dt.datetime.fromtimestamp(_kill.stat().st_mtime)
+                _exp = (_mt + _dt.timedelta(seconds=3600)).isoformat()
+            _now = _dt.datetime.now().isoformat()
+            if _now > _exp:
+                log("KILL FLAG expired (" + _exp + ") — ignoring, daemon continues")
+                try:
+                    _kill.rename(_kill.with_suffix(".expired"))
+                except Exception:
+                    pass
+            else:
+                log("KILL FLAG: " + str(_data.get("reason", "?")) + " exp=" + _exp)
+                log("agent_daemon exiting (exit=9)")
+                sys.exit(9)
     except SystemExit:
         raise
     except Exception as _e:

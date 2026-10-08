@@ -446,6 +446,7 @@ def _check_signing():
         kill = ROOT / "strategy" / "_kill_flag.json"
         kill.write_text(json.dumps({
             "ts": datetime.now().isoformat(timespec="seconds"),
+            "expires_at": (datetime.now() + __import__("datetime").timedelta(hours=1)).isoformat(timespec="seconds"),
             "reason": "core tampered",
             "detail": detail,
         }, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
