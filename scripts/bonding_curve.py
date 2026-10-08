@@ -5,14 +5,14 @@ Layout: 8 disc + 5*u64 + bool (49 bytes classic).
 Price (SOL per token unit) = virtualSolReserves / virtualTokenReserves.
 """
 from __future__ import annotations
-import base64, json, ssl, sys
+import base64, json, os, ssl, sys
 from pathlib import Path
 from urllib.request import Request, urlopen
 import certifi
 from solders.pubkey import Pubkey
 
 ROOT = Path(__file__).resolve().parent.parent
-RPC = "https://api.mainnet-beta.solana.com"
+RPC = os.getenv("HELIUS_RPC") or "https://api.mainnet-beta.solana.com"
 _SSL = ssl.create_default_context(cafile=certifi.where())
 _UA = {"Content-Type": "application/json", "User-Agent": "ai-hub/1.0"}
 

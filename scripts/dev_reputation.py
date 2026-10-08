@@ -1,10 +1,11 @@
 """Dev reputation: getSignaturesForAddress on dev wallets of recent mints."""
 import json, time, ssl, certifi, urllib.request, urllib.error
+import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 JOURNAL = ROOT / ".runtime" / "dev_reputation.jsonl"
-RPC = "https://api.mainnet-beta.solana.com"
+RPC = os.getenv("HELIUS_RPC") or "https://api.mainnet-beta.solana.com"
 UA = {"User-Agent": "Mozilla/5.0", "Content-Type": "application/json"}
 ctx = ssl.create_default_context(cafile=certifi.where())
 
