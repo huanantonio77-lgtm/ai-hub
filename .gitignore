@@ -165,3 +165,8 @@ token_tracker.py
 /sysmon.py
 /task_daemon.py
 /weekly_review.py
+
+# s208: memory split
+memory_product.json
+memory_agent.json
+*.bak-s208-*

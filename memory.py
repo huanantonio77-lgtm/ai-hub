@@ -15,7 +15,7 @@ from pathlib import Path
 from datetime import datetime
 
 ROOT = Path(__file__).resolve().parent
-MEM_FILE = ROOT / "memory.json"
+MEM_FILE = ROOT / "memory_product.json"  # s208-C4: split product/agent
 
 class Memory:
     def __init__(self):

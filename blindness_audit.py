@@ -222,6 +222,52 @@ def _detect_dead_sensors():
     return out
 
 
+def _detect_stale_memory():
+    """s208-C7: check memory freshness. Returns list of dicts (one per track)."""
+    out = []
+    now = datetime.now(timezone.utc)
+    checks = [
+        ("memory_product.json", 30, "product"),
+        ("memory_agent.json", 2, "agent"),
+    ]
+    for fname, threshold_days, track in checks:
+        p = ROOT / fname
+        if not p.exists():
+            out.append({"track": track, "file": fname, "status": "missing",
+                        "last": None, "age_days": None, "threshold": threshold_days})
+            continue
+        try:
+            d = json.loads(p.read_text(encoding="utf-8"))
+            ls = d.get("learnings") or []
+            last_ts = None
+            if ls:
+                last_ts = ls[-1].get("ts") or ls[-1].get("date")
+            if not last_ts and track == "agent":
+                last_ts = d.get("self_reflect_last")
+            if not last_ts:
+                out.append({"track": track, "file": fname, "status": "empty",
+                            "last": None, "age_days": None, "threshold": threshold_days})
+                continue
+            ts_str = str(last_ts).replace(" ", "T")
+            if len(ts_str) == 10:
+                ts_str += "T00:00:00"
+            ts_str = ts_str[:19]
+            t = datetime.fromisoformat(ts_str)
+            if t.tzinfo is None:
+                t = t.replace(tzinfo=timezone.utc)
+            age = (now - t).total_seconds() / 86400.0
+            if age < 0:
+                age = 0.0
+            status = "stale" if age > threshold_days else "ok"
+            out.append({"track": track, "file": fname, "status": status,
+                        "last": last_ts, "age_days": round(age, 2), "threshold": threshold_days})
+        except Exception as e:
+            out.append({"track": track, "file": fname, "status": "error",
+                        "last": None, "age_days": None, "threshold": threshold_days,
+                        "err": type(e).__name__})
+    return out
+
+
 def _render_report(d, ts=None):
     if ts is None:
         ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -295,6 +341,22 @@ def run_report(quiet=False):
     n_total = len(d)
     n_missing = len([1 for i in d.values() if not i["has_marker"]])
     _append_autonomy("classes=" + str(n_total) + " missing_marker=" + str(n_missing))
+    # s208-C7: stale memory check (fail-open)
+    try:
+        _stale = _detect_stale_memory()
+        _stale_bad = [m for m in _stale if m["status"] != "ok"]
+        if _stale_bad:
+            _sect = ["", "### Stale memory (s208-C7)"]
+            for m in _stale_bad:
+                _sect.append("- " + m["track"] + " (" + m["file"] + "): status=" +
+                             m["status"] + " last=" + str(m["last"]) +
+                             " age=" + str(m["age_days"]) + "d thr=" + str(m["threshold"]) + "d")
+            _append_md("\n".join(_sect))
+            _append_autonomy("stale_memory=" + str(len(_stale_bad)), effect=len(_stale_bad))
+        else:
+            _append_autonomy("stale_memory=0")
+    except Exception as _e:
+        _append_autonomy("stale_memory_err=" + type(_e).__name__)
     if n_missing:
         added = _add_repair_tasks(d)
         if added:
@@ -345,6 +407,11 @@ def _selftest():
     chk("has_marker_false", not _has_marker(["[repair:other] x"], "429-openrouter"))
     chk("render_empty", "No persistent" in _render_report({}))
     chk("render_one", "429-openrouter" in _render_report({"429-openrouter": {"kind": "429", "where": "openrouter", "count": 44, "ratio": 0.4, "has_marker": False}}))
+    # s208-C7: stale memory
+    _sm = _detect_stale_memory()
+    chk("stale_memory_is_list", isinstance(_sm, list))
+    chk("stale_memory_two_tracks", len(_sm) == 2)
+    chk("stale_memory_has_status", all("status" in m for m in _sm))
     print("passed " + str(ok) + "/" + str(total))
     return 0 if ok == total else 1
 
