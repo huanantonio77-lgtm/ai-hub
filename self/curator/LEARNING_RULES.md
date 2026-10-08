@@ -183,3 +183,22 @@ A/B run показал, что flow-reversal не работает без фил
 - "Loss" в live = fees + slippage + LOCKED rent.
 - Реальный PnL считается ПОСЛЕ bulk close.
 - Не пытаться close вслепую (fail tx = -0.0001 SOL fee каждый раз).
+
+## Правило 12 - Vendor independence: свой primary + fallback (s213)
+
+**Источник:** s213 (PumpPortal trade-stream молча перестал отдавать events: create=33/60s, buy=0, sell=0; пользователь: "давай все строить свое, возьми это за правило")
+
+**Формулировка:**
+- Никакой внешний вендор не сидит в критическом пути единолично. У каждого компонента - primary + fallback + auto-switch.
+- Критические компоненты:
+  1. Data stream: primary = own WS на Helius (logsSubscribe + accountSubscribe bonding-curve PDA); fallback = PumpPortal.
+  2. Tx builder: primary = own (solders + spl-token + MessageV0); fallback = PumpPortal trade-local.
+  3. RPC: pool 4 провайдера (s210), auto-rotate on 429/timeout.
+- Watchdog: liveness-check mtime критичных файлов каждые 5 мин. Молчание данных больше 15 мин = алерт + auto-switch.
+- Все инциденты писать в .runtime/vendor_incidents.jsonl (ts, vendor, symptom, action).
+
+**Следствие:**
+- Если один вендор падает - торговля продолжается через fallback.
+- Разрыв s209 "агент не знает, что болен" закрыт: watchdog видит молчание данных сам.
+- Не строить зависимость от чужого API без плана Б.
+
