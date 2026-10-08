@@ -4,7 +4,7 @@ s211 fast-entry v2 proof-of-concept. NOT for live trading.
 PnL estimate: pump.fun approx price ~ v_sol^2.
 """
 import asyncio, json, time, pathlib, sys, statistics
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Optional
 
 sys.path.insert(0, "scripts")
@@ -21,6 +21,40 @@ SIZE_SOL          = 0.01
 TICK_S            = 5
 SMOKE_DURATION_S  = 360
 INITIAL_V_SOL     = 30.0  # pump.fun virtual reserve
+
+POSITIONS_FILE = pathlib.Path(".runtime/paper_v2_positions.json")
+JOURNAL_FILE   = pathlib.Path(".runtime/paper_v2_trades.jsonl")
+PAUSE_FLAG     = pathlib.Path(".runtime/trading_paused.flag")
+
+
+def _save_positions(positions):
+    try:
+        POSITIONS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        data = {m: asdict(p) for m, p in positions.items()}
+        POSITIONS_FILE.write_text(json.dumps(data))
+    except Exception as e:
+        print(f"  [positions] save failed: {e}")
+
+
+def _load_positions():
+    if not POSITIONS_FILE.exists():
+        return {}
+    try:
+        data = json.loads(POSITIONS_FILE.read_text())
+        return {m: Position(**d) for m, d in data.items()}
+    except Exception as e:
+        print(f"  [positions] load failed: {e}")
+        return {}
+
+
+def _append_journal(rec):
+    try:
+        JOURNAL_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with JOURNAL_FILE.open("a") as fh:
+            fh.write(json.dumps(rec) + chr(10))
+    except Exception as e:
+        print(f"  [journal] append failed: {e}")
+
 
 
 @dataclass
@@ -40,15 +74,18 @@ class Position:
     peak_chg: float = 0.0
 
 
-async def main():
+async def main(duration: int = SMOKE_DURATION_S):
     env = {}
     for line in pathlib.Path(".env").read_text().splitlines():
         if "=" in line and not line.startswith("#"):
             k, v = line.split("=", 1)
             env[k.strip()] = v.strip()
 
+    if PAUSE_FLAG.exists():
+        print("  [s212] trading paused by flag, exiting cleanly")
+        return
     candidates: dict[str, Candidate] = {}
-    positions: dict[str, Position] = {}
+    positions = _load_positions()
     closed: list[dict] = []
     ts: Optional[TradeStream] = None
 
@@ -73,7 +110,7 @@ async def main():
           f"np>={FILTER_NP_MIN} ub>={FILTER_UB_MIN} hold={HOLD_S}s")
 
     start = time.time()
-    while time.time() - start < SMOKE_DURATION_S:
+    while time.time() - start < duration:
         await asyncio.sleep(TICK_S)
         now = time.time()
 
@@ -94,6 +131,7 @@ async def main():
                 print(f"  [ENTER] {mint[:16]}... np={s['net_pressure']:+.2f} "
                       f"ub={s['unique_buyers']} buy={s['buy_sol']:.3f} v_sol={cur_v:.2f}")
                 candidates.pop(mint, None)
+                _save_positions(positions)
             elif now - c.seen_at > MIN_WAIT_S * 2:
                 # cost-bug fix: age-out зав. candidates (s211-p5)
                 print(f"  [skip] {mint[:16]}... aged={now-c.seen_at:.0f}s "
@@ -115,15 +153,18 @@ async def main():
             elif age >= HOLD_S: reason = "hold_timeout"
             if reason:
                 pnl = chg * p.size_sol
-                closed.append({"mint": mint, "chg": chg, "pnl": pnl, "reason": reason})
+                rec = {"mint": mint, "chg": chg, "pnl": pnl, "reason": reason, "ts": now, "age": age}
+                closed.append(rec)
                 print(f"  [EXIT/{reason}] {mint[:16]}... chg={chg:+.1%} pnl={pnl:+.5f}")
                 positions.pop(mint, None)
                 candidates.pop(mint, None)
                 await ts.unsubscribe_token(mint)
+                _save_positions(positions)
+                _append_journal(rec)
 
     await ts.stop()
     print()
-    print(f"  === PAPER RESULTS ({SMOKE_DURATION_S}s) ===")
+    print(f"  === PAPER RESULTS ({duration}s) ===")
     print(f"  total candidates seen: {len(candidates) + len(positions) + len(closed)}")
     print(f"  closed: {len(closed)}  open: {len(positions)}")
     total_pnl = sum(c["pnl"] for c in closed)
@@ -134,4 +175,6 @@ async def main():
         print(f"  avg chg: {statistics.mean(c['chg'] for c in closed):+.1%}")
     print(f"  stream cost: {ts.cost_sol():.8f} SOL")
 
-asyncio.run(main())
+if __name__ == "__main__":
+    _dur = int(sys.argv[1]) if len(sys.argv) > 1 else SMOKE_DURATION_S
+    asyncio.run(main(_dur))

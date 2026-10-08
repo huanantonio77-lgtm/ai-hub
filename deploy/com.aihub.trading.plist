@@ -7,7 +7,7 @@
     <array>
         <string>/Library/Frameworks/Python.framework/Versions/3.10/bin/python3</string>
         <string>-u</string>
-        <string>/Users/salamkhalikov/Desktop/ai-hub/scripts/sniper_v2.py</string>
+        <string>/Users/salamkhalikov/Desktop/ai-hub/scripts/paper_fast_v2.py</string>
         <string>3600</string>
     </array>
     <key>WorkingDirectory</key><string>/Users/salamkhalikov/Desktop/ai-hub</string>
