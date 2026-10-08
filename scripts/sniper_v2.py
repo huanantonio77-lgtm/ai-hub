@@ -216,6 +216,7 @@ def _write_exit(mint, pos, px, chg, age, reason, exit_pct, now):
     with open(JOURNAL, "a") as f:
         f.write(json.dumps(rec) + "\n")
     STATS["exits"] = STATS.get("exits", 0) + 1
+    STATS["pnl_sol"] = STATS.get("pnl_sol", 0.0) + pnl
     print(f"[t] EXIT {mint[:8]} {reason} chg={chg*100:+.1f}% age={age}s pnl={pnl:+.4f} x{actual_exit:.2f}")
 
     # partial: reduce size, keep in OPEN if remainder > 0

@@ -12,6 +12,7 @@ session_verify.py (s84-4) — исполнитель ПРАВИЛА №00.
 Порог тревоги: ratio < 0.8 → regression.
 """
 import argparse
+import pathlib
 import json
 import os
 import re
@@ -688,8 +689,25 @@ def run(mode="in"):
     return 0 if n_regr == 0 else 2
 
 
+def _self_lint_block():
+    """s210: 6th axis pre-flight - self_lint check."""
+    import subprocess, sys
+    lint = pathlib.Path(__file__).resolve().parent / "scripts" / "self_lint.py"
+    if not lint.exists():
+        return
+    print("=== 6. self_lint ===")
+    try:
+        r = subprocess.run([sys.executable, str(lint)], capture_output=True, text=True, timeout=60)
+        out = (r.stdout or "").strip().splitlines()
+        for line in out[:5]:
+            print("  " + line)
+    except Exception as e:
+        print(f"  self_lint err: {e}")
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description="session_verify (s84-4)")
+    _self_lint_block()
     g = p.add_mutually_exclusive_group(required=True)
     g.add_argument("--in", dest="mode", action="store_const", const="in")
     g.add_argument("--mid", dest="mode", action="store_const", const="mid")
